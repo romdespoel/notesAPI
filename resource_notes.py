@@ -26,7 +26,6 @@ class NoteResource(Resource):
             abort(404, message="Note %s doesn't exist" % id)
         return note, 200
 
-
     @marshal_with(note_fields)
     def delete(self, id):
         note = session.query(Note).filter(Note.id == id).first()
