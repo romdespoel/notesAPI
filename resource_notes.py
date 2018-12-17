@@ -8,7 +8,8 @@ note_fields = {
     'id': fields.Integer,
     'title': fields.String,
     'body': fields.String,
-    'date': fields.String
+    'date': fields.String,
+    'archived': fields.Boolean
 }
 
 parser = reqparse.RequestParser()
@@ -43,21 +44,41 @@ class NoteResource(Resource):
         note.body = args['body']
         date = datetime.now()
         note.date = date.strftime("%a, %d/%m/%Y")
+        note.archived = False
         session.add(note)
         session.commit()
         return note, 201
 
+
 class Notes(Resource):
     @marshal_with(note_fields)
     def get(self):
-        notes = session.query(Note).all()
+        notes = session.query(Note).filter(Note.archived == False).all()
         return notes, 200
 
     @marshal_with(note_fields)
     def post(self):
         parsed_args = parser.parse_args()
         note = Note(title=parsed_args['title'], body=parsed_args['body'],
-                    date= datetime.now().strftime("%a, %d/%m/%Y"))
+                    date= datetime.now().strftime("%a, %d/%m/%Y"),
+                    archived = False)
         session.add(note)
         session.commit()
         return note, 201
+
+
+class Archives(Resource):
+    @marshal_with(note_fields)
+    def get(self):
+        notes = session.query(Note).filter(Note.archived == True).all()
+        return notes, 200
+
+    @marshal_with(note_fields)
+    def delete(self, id):
+        note = session.query(Note).filter(Note.id == id).first()
+        if not note:
+            abort(404, message="Note %s doesn't exist" % id)
+        note.archived = True
+        session.add(note)
+        session.commit()
+        return note, 202
