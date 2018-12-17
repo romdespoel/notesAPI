@@ -1,15 +1,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy_utils import database_exists, create_database
 
 DB = 'sqlite:///./database.db'
 Base = declarative_base()
 
 engine = create_engine(DB)
-if not database_exists(engine.url):
-    create_database(engine.url)
+Base.metadata.create_all(engine)
 
-Session = sessionmaker(autoFlush=False, bind=engine)
+Session = sessionmaker(autocommit=False,
+                       autoflush=False,
+                       bind=create_engine(DB))
 session = scoped_session(Session)
-
